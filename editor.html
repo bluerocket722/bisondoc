@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Back Office | Documents</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://docs.bisondoc.com/web-apps/apps/api/documents/api.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Roboto',Arial,sans-serif;background:#f8f9fa;color:#202124;height:100vh;display:flex;flex-direction:column}
+    header{height:56px;background:#fff;border-bottom:1px solid #dadce0;display:flex;align-items:center;padding:0 20px;gap:16px;flex-shrink:0}
+    .logo{font-weight:700;font-size:18px}.logo span{color:#1a73e8}
+    header a{margin-left:auto;color:#1a73e8;text-decoration:none;font-size:14px;font-weight:600}
+    .wrap{flex:1;display:flex;min-height:0}
+    .side{width:280px;background:#fff;border-right:1px solid #dadce0;display:flex;flex-direction:column;flex-shrink:0}
+    .side h3{font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:#5f6368;padding:16px 16px 8px}
+    .upload{margin:8px 16px 12px}
+    .upload label{display:block;background:#1a73e8;color:#fff;text-align:center;padding:10px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer}
+    .upload input{display:none}
+    .files{flex:1;overflow:auto;padding:0 8px 16px}
+    .file{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+    .file:hover{background:#f1f3f4}
+    .file.active{background:#e8f0fe;color:#1a73e8;font-weight:600}
+    .empty{color:#80868b;font-size:13px;padding:12px 16px}
+    .main{flex:1;min-width:0;position:relative}
+    #placeholder{width:100%;height:100%}
+    .hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#80868b;font-size:15px;text-align:center;padding:24px}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">Back<span>Office</span> · Documents</div>
+    <a href="back-office.html">← Back to tools</a>
+  </header>
+  <div class="wrap">
+    <div class="side">
+      <h3>Your documents</h3>
+      <div class="upload">
+        <label>＋ Upload a document
+          <input type="file" id="fileInput" accept=".docx,.xlsx,.pptx,.doc,.xls,.ppt,.odt,.ods,.odp,.txt,.csv,.pdf">
+        </label>
+      </div>
+      <div class="files" id="fileList"><div class="empty">Loading…</div></div>
+    </div>
+    <div class="main">
+      <div id="placeholder"></div>
+      <div class="hint" id="hint">Upload a document or pick one on the left to start editing.</div>
+    </div>
+  </div>
+
+  <script>
+    const SB_URL = 'https://xbwuvaxtnylqvagdvpxp.supabase.co';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhid3V2YXh0bnlscXZhZ2R2cHhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3Njk1NjMsImV4cCI6MjA5NDM0NTU2M30.WnCOew6w9HtQ2eAM1vpSJCb_AjAvv9x7Mev-k2IxSpc';
+    const BUCKET = 'documents';
+    const sb = supabase.createClient(SB_URL, SB_KEY);
+    let editor = null;
+
+    async function loadFiles() {
+      const list = document.getElementById('fileList');
+      const { data, error } = await sb.storage.from(BUCKET).list('', { sortBy: { column: 'created_at', order: 'desc' } });
+      if (error) { list.innerHTML = '<div class="empty">Could not load files.</div>'; return; }
+      const files = (data || []).filter(f => f.name && !f.name.startsWith('.'));
+      if (!files.length) { list.innerHTML = '<div class="empty">No documents yet. Upload one above.</div>'; return; }
+      list.innerHTML = '';
+      files.forEach(f => {
+        const el = document.createElement('div');
+        el.className = 'file'; el.textContent = '📄 ' + f.name;
+        el.onclick = () => { document.querySelectorAll('.file').forEach(x=>x.classList.remove('active')); el.classList.add('active'); openDoc(f.name); };
+        list.appendChild(el);
+      });
+    }
+
+    async function openDoc(name) {
+      document.getElementById('hint').style.display = 'none';
+      const res = await fetch('/api/onlyoffice-config?file=' + encodeURIComponent(name));
+      const config = await res.json();
+      config.width = '100%'; config.height = '100%';
+      if (editor) editor.destroyEditor();
+      editor = new DocsAPI.DocEditor('placeholder', config);
+    }
+
+    document.getElementById('fileInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const { error } = await sb.storage.from(BUCKET).upload(file.name, file, { upsert: true });
+      if (error) { alert('Upload failed: ' + error.message); return; }
+      await loadFiles();
+      openDoc(file.name);
+    });
+
+    loadFiles();
+  </script>
+</body>
+</html>
