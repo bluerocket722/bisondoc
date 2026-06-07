@@ -63,7 +63,7 @@
     const SB_URL = 'https://xbwuvaxtnylqvagdvpxp.supabase.co';
     const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhid3V2YXh0bnlscXZhZ2R2cHhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3Njk1NjMsImV4cCI6MjA5NDM0NTU2M30.WnCOew6w9HtQ2eAM1vpSJCb_AjAvv9x7Mev-k2IxSpc';
     const BUCKET = 'documents';
-    const TEMPLATES = { docx: 'templates/blank.docx', xlsx: 'templates/blank.xlsx', pptx: 'templates/blank.pptx' };
+        const TEMPLATES = { docx: 'blank.docx', xlsx: 'blank.xlsx', pptx: 'blank.pptx' };
     const sb = supabase.createClient(SB_URL, SB_KEY);
     let editor = null;
 
@@ -71,7 +71,8 @@
       const list = document.getElementById('fileList');
       const { data, error } = await sb.storage.from(BUCKET).list('', { sortBy: { column: 'created_at', order: 'desc' } });
       if (error) { list.innerHTML = '<div class="empty">Could not load files.</div>'; return; }
-      const files = (data || []).filter(f => f.id && !f.name.startsWith('.'));
+            const TEMPLATE_NAMES = ['blank.docx','blank.xlsx','blank.pptx'];
+      const files = (data || []).filter(f => f.id && !f.name.startsWith('.') && !TEMPLATE_NAMES.includes(f.name));
       if (!files.length) { list.innerHTML = '<div class="empty">No documents yet.</div>'; return; }
       list.innerHTML = '';
       files.forEach(f => {
