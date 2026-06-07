@@ -32,9 +32,12 @@ module.exports = (req, res) => {
       url: fileUrl
     },
     documentType: docType(ext),
-    editorConfig: {
+        editorConfig: {
       mode: 'edit',
-      callbackUrl: callbackUrl
+      callbackUrl: callbackUrl,
+      customization: {
+        goback: { text: 'Back to Documents', requestClose: true }
+      }
     }
   };
 
