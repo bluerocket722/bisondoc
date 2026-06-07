@@ -16,7 +16,6 @@
     html,body{height:100%}
     body{font-family:'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
 
-    /* ---- Browser screen ---- */
     .topbar{height:60px;background:linear-gradient(90deg,var(--navy),var(--navy-dark));display:flex;align-items:center;padding:0 22px;gap:14px;color:#fff}
     .topbar .logo{font-weight:700;font-size:19px;letter-spacing:.3px}
     .topbar .logo span{color:#7fb0ff}
@@ -26,7 +25,7 @@
     .section-title:first-child{margin-top:4px}
 
     .create-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-    .create-card{background:var(--surface);border:1px solid var(--border);border-left:5px solid var(--blue);border-radius:12px;padding:18px 18px;cursor:pointer;transition:box-shadow .15s,transform .15s;display:flex;flex-direction:column;gap:6px}
+    .create-card{background:var(--surface);border:1px solid var(--border);border-left:5px solid var(--blue);border-radius:12px;padding:18px;cursor:pointer;transition:box-shadow .15s,transform .15s;display:flex;flex-direction:column;gap:6px}
     .create-card:hover{box-shadow:0 6px 18px rgba(22,48,92,.12);transform:translateY(-2px)}
     .create-card.sheet{border-left-color:var(--green)}
     .create-card.slide{border-left-color:var(--orange)}
@@ -39,20 +38,16 @@
     .upload input{display:none}
 
     .docs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
-    .doc{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:box-shadow .15s,border-color .15s}
+    .doc{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:box-shadow .15s,border-color .15s}
     .doc:hover{box-shadow:0 6px 16px rgba(22,48,92,.1);border-color:var(--blue)}
     .doc .badge{width:38px;height:38px;border-radius:9px;background:var(--blue-soft);color:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;text-transform:uppercase}
     .doc .nm{font-size:14px;font-weight:600;word-break:break-word;line-height:1.35}
     .empty{color:var(--sub);font-size:14px;padding:10px 2px}
 
-    /* ---- Fullscreen editor ---- */
-    .editor-screen{position:fixed;inset:0;z-index:1000;background:#fff;display:none;flex-direction:column}
-    .editor-screen.open{display:flex}
-    .editor-bar{height:46px;background:linear-gradient(90deg,var(--navy),var(--navy-dark));display:flex;align-items:center;padding:0 14px;gap:12px;color:#fff;flex-shrink:0}
-    .editor-bar button{background:rgba(255,255,255,.14);border:none;color:#fff;font-size:13px;font-weight:600;padding:8px 14px;border-radius:8px;cursor:pointer}
-    .editor-bar button:hover{background:rgba(255,255,255,.26)}
-    .editor-bar .fname{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    #placeholder{flex:1;width:100%}
+    /* Fullscreen editor — edge to edge */
+    .editor-screen{position:fixed;inset:0;z-index:1000;background:#fff;display:none}
+    .editor-screen.open{display:block}
+    #placeholder{width:100%;height:100%}
 
     @media (max-width:768px){
       .create-row{grid-template-columns:1fr}
@@ -62,7 +57,6 @@
   </style>
 </head>
 <body>
-  <!-- Browser -->
   <div class="topbar">
     <div class="logo">Back<span>Office</span> · Documents</div>
     <a href="back-office.html" class="back">← Tools</a>
@@ -74,24 +68,17 @@
       <div class="create-card sheet" data-type="xlsx"><div class="ic">📊</div><div class="t">Spreadsheet</div><div class="d">Excel-style sheet</div></div>
       <div class="create-card slide" data-type="pptx"><div class="ic">📽️</div><div class="t">Presentation</div><div class="d">PowerPoint-style deck</div></div>
     </div>
-
     <div class="section-title">Or upload</div>
     <div class="upload">
       <label>⬆ Upload a document
         <input type="file" id="fileInput" accept=".docx,.xlsx,.pptx,.doc,.xls,.ppt,.odt,.ods,.odp,.txt,.csv,.pdf">
       </label>
     </div>
-
     <div class="section-title">Your documents</div>
     <div class="docs-grid" id="fileList"><div class="empty">Loading…</div></div>
   </div>
 
-  <!-- Fullscreen editor -->
   <div class="editor-screen" id="editorScreen">
-    <div class="editor-bar">
-      <button id="backBtn">← My Documents</button>
-      <span class="fname" id="fname"></span>
-    </div>
     <div id="placeholder"></div>
   </div>
 
@@ -103,7 +90,6 @@
     const TEMPLATE_NAMES = ['blank.docx','blank.xlsx','blank.pptx'];
     const sb = supabase.createClient(SB_URL, SB_KEY);
     let editor = null;
-
     const screen = document.getElementById('editorScreen');
 
     async function loadFiles() {
@@ -125,12 +111,12 @@
     }
 
     async function openDoc(name) {
-      document.getElementById('fname').textContent = name;
       screen.classList.add('open');
       const res = await fetch('/api/onlyoffice-config?file=' + encodeURIComponent(name));
       const config = await res.json();
       config.width = '100%'; config.height = '100%';
       config.type = (window.innerWidth <= 768) ? 'mobile' : 'desktop';
+      config.events = { onRequestClose: closeEditor };
       if (editor) { editor.destroyEditor(); editor = null; }
       editor = new DocsAPI.DocEditor('placeholder', config);
     }
@@ -140,7 +126,6 @@
       screen.classList.remove('open');
       loadFiles();
     }
-    document.getElementById('backBtn').addEventListener('click', closeEditor);
 
     document.querySelectorAll('.create-card').forEach(card => {
       card.addEventListener('click', async () => {
