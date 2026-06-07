@@ -7,67 +7,92 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://docs.bisondoc.com/web-apps/apps/api/documents/api.js"></script>
   <style>
+    :root{
+      --navy:#16305c; --navy-dark:#0f2342; --blue:#2f6cd6; --blue-soft:#e8f0fe;
+      --green:#2e9e5b; --orange:#e8833a; --ink:#1c2733; --sub:#5f6b7a;
+      --border:#dde3ec; --bg:#f4f6fa; --surface:#fff;
+    }
     *{box-sizing:border-box;margin:0;padding:0}
-    html,body{height:100%;overflow:hidden}
-    body{font-family:'Roboto',Arial,sans-serif;background:#f8f9fa;color:#202124;display:flex;flex-direction:column}
-    header{height:56px;background:#fff;border-bottom:1px solid #dadce0;display:flex;align-items:center;padding:0 16px;gap:12px;flex-shrink:0;z-index:30}
-    .menu-btn{display:none;background:none;border:none;font-size:22px;cursor:pointer;color:#5f6368;padding:4px 8px;line-height:1}
-    .logo{font-weight:700;font-size:17px}.logo span{color:#1a73e8}
-    header a.back{margin-left:auto;color:#1a73e8;text-decoration:none;font-size:14px;font-weight:600;white-space:nowrap}
-    .wrap{flex:1;display:flex;min-height:0;position:relative}
-    .side{width:280px;background:#fff;border-right:1px solid #dadce0;display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
-    .side h3{font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:#5f6368;padding:16px 16px 8px}
-    .newdocs{display:flex;flex-direction:column;gap:6px;margin:0 16px 10px}
-    .newdocs button{background:#fff;border:1px solid #dadce0;color:#202124;padding:11px 12px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;text-align:left}
-    .newdocs button:active,.newdocs button:hover{background:#f1f3f4;border-color:#1a73e8;color:#1a73e8}
-    .upload{margin:0 16px 12px}
-    .upload label{display:block;background:#1a73e8;color:#fff;text-align:center;padding:12px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer}
+    html,body{height:100%}
+    body{font-family:'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+
+    /* ---- Browser screen ---- */
+    .topbar{height:60px;background:linear-gradient(90deg,var(--navy),var(--navy-dark));display:flex;align-items:center;padding:0 22px;gap:14px;color:#fff}
+    .topbar .logo{font-weight:700;font-size:19px;letter-spacing:.3px}
+    .topbar .logo span{color:#7fb0ff}
+    .topbar .back{margin-left:auto;color:#cfe0ff;text-decoration:none;font-size:14px;font-weight:600}
+    .container{max-width:1100px;margin:0 auto;padding:32px 22px 60px}
+    .section-title{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--sub);font-weight:700;margin:28px 0 14px}
+    .section-title:first-child{margin-top:4px}
+
+    .create-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .create-card{background:var(--surface);border:1px solid var(--border);border-left:5px solid var(--blue);border-radius:12px;padding:18px 18px;cursor:pointer;transition:box-shadow .15s,transform .15s;display:flex;flex-direction:column;gap:6px}
+    .create-card:hover{box-shadow:0 6px 18px rgba(22,48,92,.12);transform:translateY(-2px)}
+    .create-card.sheet{border-left-color:var(--green)}
+    .create-card.slide{border-left-color:var(--orange)}
+    .create-card .ic{font-size:22px}
+    .create-card .t{font-weight:700;font-size:15px}
+    .create-card .d{font-size:12px;color:var(--sub)}
+
+    .upload label{display:inline-flex;align-items:center;gap:8px;background:var(--navy);color:#fff;padding:12px 22px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}
+    .upload label:hover{background:var(--navy-dark)}
     .upload input{display:none}
-    .files{flex:1;overflow:auto;padding:0 8px 16px}
-    .file{display:flex;align-items:center;gap:8px;padding:12px;border-radius:8px;cursor:pointer;font-size:14px}
-    .file:active,.file:hover{background:#f1f3f4}
-    .file.active{background:#e8f0fe;color:#1a73e8;font-weight:600}
-    .empty{color:#80868b;font-size:13px;padding:12px 16px}
-    .main{flex:1;min-width:0;position:relative}
-    #placeholder{width:100%;height:100%}
-    .hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#80868b;font-size:15px;text-align:center;padding:24px}
-    .backdrop{display:none;position:absolute;inset:0;background:rgba(0,0,0,.4);z-index:19}
+
+    .docs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+    .doc{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:box-shadow .15s,border-color .15s}
+    .doc:hover{box-shadow:0 6px 16px rgba(22,48,92,.1);border-color:var(--blue)}
+    .doc .badge{width:38px;height:38px;border-radius:9px;background:var(--blue-soft);color:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;text-transform:uppercase}
+    .doc .nm{font-size:14px;font-weight:600;word-break:break-word;line-height:1.35}
+    .empty{color:var(--sub);font-size:14px;padding:10px 2px}
+
+    /* ---- Fullscreen editor ---- */
+    .editor-screen{position:fixed;inset:0;z-index:1000;background:#fff;display:none;flex-direction:column}
+    .editor-screen.open{display:flex}
+    .editor-bar{height:46px;background:linear-gradient(90deg,var(--navy),var(--navy-dark));display:flex;align-items:center;padding:0 14px;gap:12px;color:#fff;flex-shrink:0}
+    .editor-bar button{background:rgba(255,255,255,.14);border:none;color:#fff;font-size:13px;font-weight:600;padding:8px 14px;border-radius:8px;cursor:pointer}
+    .editor-bar button:hover{background:rgba(255,255,255,.26)}
+    .editor-bar .fname{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #placeholder{flex:1;width:100%}
+
     @media (max-width:768px){
-      .menu-btn{display:block}
-      .side{position:absolute;top:0;left:0;height:100%;width:84%;max-width:320px;transform:translateX(-100%);transition:transform .25s ease;z-index:20;box-shadow:2px 0 12px rgba(0,0,0,.15)}
-      .side.open{transform:translateX(0)}
-      .backdrop.show{display:block}
+      .create-row{grid-template-columns:1fr}
+      .container{padding:20px 16px 48px}
+      .topbar{padding:0 16px}
     }
   </style>
 </head>
 <body>
-  <header>
-    <button class="menu-btn" id="menuBtn" aria-label="Menu">☰</button>
+  <!-- Browser -->
+  <div class="topbar">
     <div class="logo">Back<span>Office</span> · Documents</div>
     <a href="back-office.html" class="back">← Tools</a>
-  </header>
-  <div class="wrap">
-    <div class="side" id="side">
-      <h3>Create new</h3>
-      <div class="newdocs">
-        <button data-type="docx">＋ New Document</button>
-        <button data-type="xlsx">＋ New Spreadsheet</button>
-        <button data-type="pptx">＋ New Presentation</button>
-      </div>
-      <h3>Or upload</h3>
-      <div class="upload">
-        <label>⬆ Upload a document
-          <input type="file" id="fileInput" accept=".docx,.xlsx,.pptx,.doc,.xls,.ppt,.odt,.ods,.odp,.txt,.csv,.pdf">
-        </label>
-      </div>
-      <h3>Your documents</h3>
-      <div class="files" id="fileList"><div class="empty">Loading…</div></div>
+  </div>
+  <div class="container">
+    <div class="section-title">Create new</div>
+    <div class="create-row">
+      <div class="create-card doc-new" data-type="docx"><div class="ic">📄</div><div class="t">Document</div><div class="d">Word-style document</div></div>
+      <div class="create-card sheet" data-type="xlsx"><div class="ic">📊</div><div class="t">Spreadsheet</div><div class="d">Excel-style sheet</div></div>
+      <div class="create-card slide" data-type="pptx"><div class="ic">📽️</div><div class="t">Presentation</div><div class="d">PowerPoint-style deck</div></div>
     </div>
-    <div class="backdrop" id="backdrop"></div>
-    <div class="main">
-      <div id="placeholder"></div>
-      <div class="hint" id="hint">Tap ☰ to create or open a document.</div>
+
+    <div class="section-title">Or upload</div>
+    <div class="upload">
+      <label>⬆ Upload a document
+        <input type="file" id="fileInput" accept=".docx,.xlsx,.pptx,.doc,.xls,.ppt,.odt,.ods,.odp,.txt,.csv,.pdf">
+      </label>
     </div>
+
+    <div class="section-title">Your documents</div>
+    <div class="docs-grid" id="fileList"><div class="empty">Loading…</div></div>
+  </div>
+
+  <!-- Fullscreen editor -->
+  <div class="editor-screen" id="editorScreen">
+    <div class="editor-bar">
+      <button id="backBtn">← My Documents</button>
+      <span class="fname" id="fname"></span>
+    </div>
+    <div id="placeholder"></div>
   </div>
 
   <script>
@@ -79,42 +104,47 @@
     const sb = supabase.createClient(SB_URL, SB_KEY);
     let editor = null;
 
-    const side = document.getElementById('side');
-    const backdrop = document.getElementById('backdrop');
-    function openSide(){ side.classList.add('open'); backdrop.classList.add('show'); }
-    function closeSide(){ side.classList.remove('open'); backdrop.classList.remove('show'); }
-    document.getElementById('menuBtn').addEventListener('click', openSide);
-    backdrop.addEventListener('click', closeSide);
+    const screen = document.getElementById('editorScreen');
 
     async function loadFiles() {
       const list = document.getElementById('fileList');
       const { data, error } = await sb.storage.from(BUCKET).list('', { sortBy: { column: 'created_at', order: 'desc' } });
       if (error) { list.innerHTML = '<div class="empty">Could not load files.</div>'; return; }
       const files = (data || []).filter(f => f.id && !f.name.startsWith('.') && !TEMPLATE_NAMES.includes(f.name));
-      if (!files.length) { list.innerHTML = '<div class="empty">No documents yet.</div>'; return; }
+      if (!files.length) { list.innerHTML = '<div class="empty">No documents yet — create or upload one above.</div>'; return; }
       list.innerHTML = '';
       files.forEach(f => {
+        const ext = (f.name.split('.').pop() || '').toUpperCase();
         const el = document.createElement('div');
-        el.className = 'file'; el.textContent = '📄 ' + f.name;
-        el.onclick = () => { document.querySelectorAll('.file').forEach(x=>x.classList.remove('active')); el.classList.add('active'); openDoc(f.name); };
+        el.className = 'doc';
+        el.innerHTML = '<div class="badge">' + ext + '</div><div class="nm"></div>';
+        el.querySelector('.nm').textContent = f.name;
+        el.onclick = () => openDoc(f.name);
         list.appendChild(el);
       });
     }
 
     async function openDoc(name) {
-      document.getElementById('hint').style.display = 'none';
-      closeSide();
+      document.getElementById('fname').textContent = name;
+      screen.classList.add('open');
       const res = await fetch('/api/onlyoffice-config?file=' + encodeURIComponent(name));
       const config = await res.json();
       config.width = '100%'; config.height = '100%';
       config.type = (window.innerWidth <= 768) ? 'mobile' : 'desktop';
-      if (editor) editor.destroyEditor();
+      if (editor) { editor.destroyEditor(); editor = null; }
       editor = new DocsAPI.DocEditor('placeholder', config);
     }
 
-    document.querySelectorAll('.newdocs button').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const type = btn.dataset.type;
+    function closeEditor() {
+      if (editor) { editor.destroyEditor(); editor = null; }
+      screen.classList.remove('open');
+      loadFiles();
+    }
+    document.getElementById('backBtn').addEventListener('click', closeEditor);
+
+    document.querySelectorAll('.create-card').forEach(card => {
+      card.addEventListener('click', async () => {
+        const type = card.dataset.type;
         let name = prompt('Name your new file:', 'Untitled');
         if (!name) return;
         name = name.replace(/[^a-zA-Z0-9 _-]/g, '').trim();
@@ -122,7 +152,6 @@
         const dest = name + '.' + type;
         const { error } = await sb.storage.from(BUCKET).copy(TEMPLATES[type], dest);
         if (error) { alert('Could not create file: ' + error.message); return; }
-        await loadFiles();
         openDoc(dest);
       });
     });
@@ -132,7 +161,6 @@
       if (!file) return;
       const { error } = await sb.storage.from(BUCKET).upload(file.name, file, { upsert: true });
       if (error) { alert('Upload failed: ' + error.message); return; }
-      await loadFiles();
       openDoc(file.name);
     });
 
