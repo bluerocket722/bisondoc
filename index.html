@@ -515,19 +515,19 @@
     <!-- Step 3: Success -->
     <div id="step-success" style="display:none;text-align:center;padding:12px 0;">
       <div style="width:64px;height:64px;border-radius:50%;background:#e6f4ea;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
-        <span class="material-icons-round" style="font-size:34px;color:#34a853;">check_circle</span>
+        <span class="material-icons-round" style="font-size:34px;color:#34a853;">mark_email_unread</span>
       </div>
-      <div class="card-headline">You're all set!</div>
+      <div class="card-headline">Check your email</div>
       <p style="font-size:14px;color:var(--text-sub);margin:10px 0 24px;line-height:1.7;">
-        Your Back Office account is ready. Check your email to confirm, then start using your free tools.
+        We've sent a confirmation link to your inbox. Click it to verify your account, then sign in to start using your free tools.
       </p>
-      <a href="index.html" class="btn-primary" style="justify-content:center;width:100%;">
-        <span class="material-icons-round" style="font-size:18px;">rocket_launch</span>
-        Go to My Tools
+      <a href="#" id="back-to-login" class="btn-primary" style="justify-content:center;width:100%;">
+        <span class="material-icons-round" style="font-size:18px;">login</span>
+        Back to Sign In
       </a>
       <div class="form-note" style="margin-top:16px;">
         <span class="material-icons-round">mail</span>
-        Check your inbox to verify your email
+        Didn't get it? Check your spam folder
       </div>
     </div>
 
@@ -741,10 +741,24 @@
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhid3V2YXh0bnlscXZhZ2R2cHhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3Njk1NjMsImV4cCI6MjA5NDM0NTU2M30.WnCOew6w9HtQ2eAM1vpSJCb_AjAvv9x7Mev-k2IxSpc'
   );
 
+  const APP_URL = 'editor.html';
+
   function showStep(id) {
     ['step-auth','step-login','step-profile','step-success'].forEach(s => {
       document.getElementById(s).style.display = s === id ? '' : 'none';
     });
+  }
+  function goToApp() { window.location.replace(APP_URL); }
+
+  // A signed-in user either finishes their profile (first time) or goes straight to the app.
+  async function routeForSession(session) {
+    try {
+      const { data } = await sb.from('profiles').select('trade').eq('id', session.user.id).single();
+      if (data && data.trade) goToApp();
+      else showStep('step-profile');
+    } catch (_) {
+      showStep('step-profile');
+    }
   }
   function showError(elId, msg) { const el = document.getElementById(elId); el.textContent = msg; el.style.display = ''; }
   function hideError(elId) { document.getElementById(elId).style.display = 'none'; }
@@ -752,6 +766,7 @@
 
   document.getElementById('show-login').addEventListener('click', e => { e.preventDefault(); showStep('step-login'); });
   document.getElementById('show-signup').addEventListener('click', e => { e.preventDefault(); showStep('step-auth'); });
+  document.getElementById('back-to-login').addEventListener('click', e => { e.preventDefault(); showStep('step-login'); });
 
   async function googleSignIn() {
     const { error } = await sb.auth.signInWithOAuth({
@@ -772,10 +787,15 @@
     if (!email)          return showError('auth-error', 'Please enter your email address.');
     if (pass.length < 8) return showError('auth-error', 'Password must be at least 8 characters.');
     setLoading(btn, true);
-    const { error } = await sb.auth.signUp({ email, password: pass, options: { data: { full_name: name } } });
+    const { data, error } = await sb.auth.signUp({
+      email, password: pass,
+      options: { data: { full_name: name }, emailRedirectTo: window.location.href }
+    });
     setLoading(btn, false);
     if (error) return showError('auth-error', error.message);
-    showStep('step-profile');
+    // If email confirmation is required, Supabase returns no active session yet.
+    if (data.session) showStep('step-profile');
+    else showStep('step-success');
   });
 
   document.getElementById('btn-login').addEventListener('click', async () => {
@@ -786,10 +806,10 @@
     if (!email) return showError('login-error', 'Please enter your email address.');
     if (!pass)  return showError('login-error', 'Please enter your password.');
     setLoading(btn, true);
-    const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
     setLoading(btn, false);
     if (error) return showError('login-error', error.message);
-    showStep('step-success');
+    if (data.session) routeForSession(data.session);
   });
 
   document.getElementById('btn-save-profile').addEventListener('click', async () => {
@@ -801,25 +821,31 @@
     if (!trade) return showError('profile-error', 'Please select your trade.');
     setLoading(btn, true);
     const { data: { user } } = await sb.auth.getUser();
-    if (user) {
-      await sb.from('profiles').upsert({
-        id: user.id,
-        full_name: user.user_metadata?.full_name || user.email,
-        email: user.email,
-        phone, trade,
-        business_size: size,
-        updated_at: new Date().toISOString()
-      });
+    if (!user) {
+      // No active session yet (email not confirmed) — prompt to verify.
+      setLoading(btn, false);
+      return showStep('step-success');
     }
+    const { error } = await sb.from('profiles').upsert({
+      id: user.id,
+      full_name: user.user_metadata?.full_name || user.email,
+      email: user.email,
+      phone, trade,
+      business_size: size,
+      updated_at: new Date().toISOString()
+    });
     setLoading(btn, false);
-    showStep('step-success');
+    if (error) return showError('profile-error', error.message);
+    goToApp();
   });
 
+  // Recognise returning users: INITIAL_SESSION fires on load with a restored session,
+  // SIGNED_IN fires after a fresh login or OAuth redirect.
   sb.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_IN' && session) {
-      sb.from('profiles').select('trade').eq('id', session.user.id).single()
-        .then(({ data }) => showStep(data?.trade ? 'step-success' : 'step-profile'))
-        .catch(() => showStep('step-profile'));
+    if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
+      routeForSession(session);
+    } else if (event === 'SIGNED_OUT') {
+      showStep('step-auth');
     }
   });
 </script>
