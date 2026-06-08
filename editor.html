@@ -60,6 +60,7 @@
   <div class="topbar">
     <div class="logo">Back<span>Office</span> · Documents</div>
     <a href="back-office.html" class="back">← Tools</a>
+    <a href="#" class="back" id="signout" style="margin-left:18px;">Sign out</a>
   </div>
   <div class="container">
     <div class="section-title">Create new</div>
@@ -86,17 +87,29 @@
     const SB_URL = 'https://xbwuvaxtnylqvagdvpxp.supabase.co';
     const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhid3V2YXh0bnlscXZhZ2R2cHhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3Njk1NjMsImV4cCI6MjA5NDM0NTU2M30.WnCOew6w9HtQ2eAM1vpSJCb_AjAvv9x7Mev-k2IxSpc';
     const BUCKET = 'documents';
+    const LOGIN_URL = 'index.html';
     const TEMPLATES = { docx: 'blank.docx', xlsx: 'blank.xlsx', pptx: 'blank.pptx' };
-    const TEMPLATE_NAMES = ['blank.docx','blank.xlsx','blank.pptx'];
     const sb = supabase.createClient(SB_URL, SB_KEY);
     let editor = null;
+    let userId = null;
     const screen = document.getElementById('editorScreen');
+
+    // Every file lives under a folder named after the signed-in user's id, so each
+    // person only ever sees their own documents.
+    function userPath(name) { return userId + '/' + name; }
+
+    async function requireSession() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { window.location.replace(LOGIN_URL); return null; }
+      userId = session.user.id;
+      return session;
+    }
 
     async function loadFiles() {
       const list = document.getElementById('fileList');
-      const { data, error } = await sb.storage.from(BUCKET).list('', { sortBy: { column: 'created_at', order: 'desc' } });
+      const { data, error } = await sb.storage.from(BUCKET).list(userId, { sortBy: { column: 'created_at', order: 'desc' } });
       if (error) { list.innerHTML = '<div class="empty">Could not load files.</div>'; return; }
-      const files = (data || []).filter(f => f.id && !f.name.startsWith('.') && !TEMPLATE_NAMES.includes(f.name));
+      const files = (data || []).filter(f => f.id && !f.name.startsWith('.'));
       if (!files.length) { list.innerHTML = '<div class="empty">No documents yet — create or upload one above.</div>'; return; }
       list.innerHTML = '';
       files.forEach(f => {
@@ -112,7 +125,13 @@
 
     async function openDoc(name) {
       screen.classList.add('open');
-      const res = await fetch('/api/onlyoffice-config?file=' + encodeURIComponent(name));
+      // Fetch a fresh token in case the session refreshed since page load.
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { window.location.replace(LOGIN_URL); return; }
+      const res = await fetch('/api/onlyoffice-config?file=' + encodeURIComponent(userPath(name)), {
+        headers: { Authorization: 'Bearer ' + session.access_token }
+      });
+      if (!res.ok) { alert('Could not open document.'); closeEditor(); return; }
       const config = await res.json();
       config.width = '100%'; config.height = '100%';
       config.type = (window.innerWidth <= 768) ? 'mobile' : 'desktop';
@@ -134,22 +153,31 @@
         if (!name) return;
         name = name.replace(/[^a-zA-Z0-9 _-]/g, '').trim();
         if (!name) return;
-        const dest = name + '.' + type;
-        const { error } = await sb.storage.from(BUCKET).copy(TEMPLATES[type], dest);
+        const fileName = name + '.' + type;
+        const { error } = await sb.storage.from(BUCKET).copy(TEMPLATES[type], userPath(fileName));
         if (error) { alert('Could not create file: ' + error.message); return; }
-        openDoc(dest);
+        openDoc(fileName);
       });
     });
 
     document.getElementById('fileInput').addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
-      const { error } = await sb.storage.from(BUCKET).upload(file.name, file, { upsert: true });
+      const { error } = await sb.storage.from(BUCKET).upload(userPath(file.name), file, { upsert: true });
       if (error) { alert('Upload failed: ' + error.message); return; }
       openDoc(file.name);
     });
 
-    loadFiles();
+    document.getElementById('signout').addEventListener('click', async (e) => {
+      e.preventDefault();
+      await sb.auth.signOut();
+      window.location.replace(LOGIN_URL);
+    });
+
+    (async () => {
+      const session = await requireSession();
+      if (session) loadFiles();
+    })();
   </script>
 </body>
 </html>
