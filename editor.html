@@ -8,75 +8,134 @@
   <script src="https://docs.bisondoc.com/web-apps/apps/api/documents/api.js"></script>
   <style>
     :root{
-      --navy:#16305c; --navy-dark:#0f2342; --blue:#2f6cd6; --blue-soft:#e8f0fe;
-      --green:#2e9e5b; --orange:#e8833a; --ink:#1c2733; --sub:#5f6b7a;
-      --border:#dde3ec; --bg:#f4f6fa; --surface:#fff;
+      --navy:#16305c; --blue:#2f6cd6; --blue-dark:#1b4fb0; --blue-soft:#eaf1fd;
+      --ink:#1b2733; --sub:#5b6b7c; --line:#e6eaf0; --bg:#f3f6fb; --surface:#fff;
+      --word:#2b579a; --cell:#217346; --slide:#c43e1c; --pdf:#d93025; --gray:#6b7785;
+      --danger:#d93025;
+      --shadow-sm:0 1px 2px rgba(16,40,80,.06),0 1px 3px rgba(16,40,80,.08);
+      --shadow-md:0 4px 14px rgba(16,40,80,.10),0 2px 6px rgba(16,40,80,.06);
     }
     *{box-sizing:border-box;margin:0;padding:0}
     html,body{height:100%}
-    body{font-family:'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+    body{font-family:'Segoe UI',Roboto,system-ui,Arial,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
 
-    .topbar{height:60px;background:linear-gradient(90deg,var(--navy),var(--navy-dark));display:flex;align-items:center;padding:0 22px;gap:14px;color:#fff}
-    .topbar .logo{font-weight:700;font-size:19px;letter-spacing:.3px}
-    .topbar .logo span{color:#7fb0ff}
-    .topbar .back{margin-left:auto;color:#cfe0ff;text-decoration:none;font-size:14px;font-weight:600}
-    .container{max-width:1100px;margin:0 auto;padding:32px 22px 60px}
-    .section-title{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--sub);font-weight:700;margin:28px 0 14px}
-    .section-title:first-child{margin-top:4px}
+    /* Top bar */
+    .topbar{height:56px;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 22px;gap:16px;position:sticky;top:0;z-index:50}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;letter-spacing:.2px;color:var(--ink)}
+    .brand .mark{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--blue),#5b8def);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px}
+    .brand span{color:var(--blue)}
+    .brand small{color:var(--sub);font-weight:600;font-size:13px;margin-left:2px}
+    .top-right{margin-left:auto;display:flex;align-items:center;gap:18px}
+    .top-link{color:var(--sub);text-decoration:none;font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+    .top-link:hover{color:var(--blue)}
 
-    .create-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-    .create-card{background:var(--surface);border:1px solid var(--border);border-left:5px solid var(--blue);border-radius:12px;padding:18px;cursor:pointer;transition:box-shadow .15s,transform .15s;display:flex;flex-direction:column;gap:6px}
-    .create-card:hover{box-shadow:0 6px 18px rgba(22,48,92,.12);transform:translateY(-2px)}
-    .create-card.sheet{border-left-color:var(--green)}
-    .create-card.slide{border-left-color:var(--orange)}
-    .create-card .ic{font-size:22px}
-    .create-card .t{font-weight:700;font-size:15px}
-    .create-card .d{font-size:12px;color:var(--sub)}
+    /* Layout */
+    .wrap{max-width:1160px;margin:0 auto;padding:26px 22px 64px}
+    .page-title{font-size:24px;font-weight:700;margin-bottom:18px}
 
-    .upload label{display:inline-flex;align-items:center;gap:8px;background:var(--navy);color:#fff;padding:12px 22px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}
-    .upload label:hover{background:var(--navy-dark)}
-    .upload input{display:none}
+    /* Command bar */
+    .cmdbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+    .btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:14px;font-weight:600;padding:9px 16px;border-radius:8px;cursor:pointer;transition:background .15s,border-color .15s,box-shadow .15s;font-family:inherit}
+    .btn:hover{background:var(--blue-soft);border-color:#cfe0fb}
+    .btn .ic{font-size:16px;line-height:1}
+    .btn-primary{background:var(--blue);border-color:var(--blue);color:#fff}
+    .btn-primary:hover{background:var(--blue-dark);border-color:var(--blue-dark)}
+    .spacer{flex:1}
+    .search{position:relative}
+    .search input{height:40px;width:240px;max-width:46vw;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:0 14px 0 36px;font-size:14px;font-family:inherit;outline:none;transition:border-color .15s,box-shadow .15s}
+    .search input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(47,108,214,.14)}
+    .search .si{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--gray);font-size:16px;pointer-events:none}
 
-    .docs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
-    .doc{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:box-shadow .15s,border-color .15s}
-    .doc:hover{box-shadow:0 6px 16px rgba(22,48,92,.1);border-color:var(--blue)}
-    .doc .badge{width:38px;height:38px;border-radius:9px;background:var(--blue-soft);color:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;text-transform:uppercase}
-    .doc .nm{font-size:14px;font-weight:600;word-break:break-word;line-height:1.35}
-    .empty{color:var(--sub);font-size:14px;padding:10px 2px}
+    /* New dropdown */
+    .menu-anchor{position:relative}
+    .menu{position:absolute;top:46px;left:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow-md);padding:6px;min-width:230px;z-index:40;display:none}
+    .menu.open{display:block}
+    .menu-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600}
+    .menu-item:hover{background:var(--blue-soft)}
+    .menu-item small{display:block;font-weight:400;color:var(--sub);font-size:12px}
+    .mi-icon{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:12px;flex-shrink:0}
 
-    /* Fullscreen editor — edge to edge */
+    /* Section heading */
+    .sec-head{display:flex;align-items:baseline;gap:10px;margin:26px 0 14px}
+    .sec-head h2{font-size:15px;font-weight:700}
+    .sec-head .count{color:var(--sub);font-size:13px;font-weight:500}
+
+    /* File grid */
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+    .file{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;cursor:pointer;transition:box-shadow .15s,border-color .15s,transform .12s}
+    .file:hover{box-shadow:var(--shadow-md);border-color:#d4e2fb;transform:translateY(-2px)}
+    .file .ftop{display:flex;align-items:flex-start;gap:12px}
+    .ficon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px;flex-shrink:0;letter-spacing:.3px}
+    .fmeta{min-width:0;flex:1}
+    .fname{font-size:14px;font-weight:600;line-height:1.35;word-break:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .fsub{margin-top:6px;font-size:12px;color:var(--sub)}
+    .fdel{position:absolute;top:10px;right:10px;width:30px;height:30px;border:none;background:transparent;border-radius:7px;color:var(--gray);cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .12s,background .12s,color .12s;font-size:16px}
+    .file:hover .fdel{opacity:1}
+    .fdel:hover{background:#fde7e6;color:var(--danger)}
+
+    /* Empty state */
+    .empty{text-align:center;color:var(--sub);background:var(--surface);border:1px dashed var(--line);border-radius:14px;padding:54px 20px}
+    .empty .big{font-size:46px;margin-bottom:10px}
+    .empty .t{font-size:16px;font-weight:600;color:var(--ink);margin-bottom:4px}
+    .empty .s{font-size:13px}
+    .loading{color:var(--sub);font-size:14px;padding:18px 2px}
+
+    /* Fullscreen editor */
     .editor-screen{position:fixed;inset:0;z-index:1000;background:#fff;display:none}
     .editor-screen.open{display:block}
     #placeholder{width:100%;height:100%}
 
-    @media (max-width:768px){
-      .create-row{grid-template-columns:1fr}
-      .container{padding:20px 16px 48px}
-      .topbar{padding:0 16px}
+    @media (max-width:640px){
+      .wrap{padding:18px 14px 48px}
+      .search input{width:160px}
+      .brand small{display:none}
     }
   </style>
 </head>
 <body>
   <div class="topbar">
-    <div class="logo">Back<span>Office</span> · Documents</div>
-    <a href="back-office.html" class="back">← Tools</a>
-    <a href="#" class="back" id="signout" style="margin-left:18px;">Sign out</a>
+    <div class="brand"><div class="mark">B</div>Back<span>Office</span><small>· Documents</small></div>
+    <div class="top-right">
+      <a href="back-office.html" class="top-link"><span class="ic">←</span> Tools</a>
+      <a href="#" class="top-link" id="signout">Sign out</a>
+    </div>
   </div>
-  <div class="container">
-    <div class="section-title">Create new</div>
-    <div class="create-row">
-      <div class="create-card doc-new" data-type="docx"><div class="ic">📄</div><div class="t">Document</div><div class="d">Word-style document</div></div>
-      <div class="create-card sheet" data-type="xlsx"><div class="ic">📊</div><div class="t">Spreadsheet</div><div class="d">Excel-style sheet</div></div>
-      <div class="create-card slide" data-type="pptx"><div class="ic">📽️</div><div class="t">Presentation</div><div class="d">PowerPoint-style deck</div></div>
+
+  <div class="wrap">
+    <div class="page-title">My documents</div>
+
+    <div class="cmdbar">
+      <div class="menu-anchor">
+        <button class="btn btn-primary" id="newBtn"><span class="ic">＋</span> New</button>
+        <div class="menu" id="newMenu">
+          <div class="menu-item" data-type="docx">
+            <div class="mi-icon" style="background:var(--word)">W</div>
+            <div>Document<small>Word-style document</small></div>
+          </div>
+          <div class="menu-item" data-type="xlsx">
+            <div class="mi-icon" style="background:var(--cell)">X</div>
+            <div>Spreadsheet<small>Excel-style sheet</small></div>
+          </div>
+          <div class="menu-item" data-type="pptx">
+            <div class="mi-icon" style="background:var(--slide)">P</div>
+            <div>Presentation<small>PowerPoint-style deck</small></div>
+          </div>
+        </div>
+      </div>
+      <button class="btn" id="uploadBtn"><span class="ic">⬆</span> Upload</button>
+      <input type="file" id="fileInput" style="display:none" accept=".docx,.xlsx,.pptx,.doc,.xls,.ppt,.odt,.ods,.odp,.txt,.csv,.pdf">
+      <div class="spacer"></div>
+      <div class="search">
+        <span class="si">🔍</span>
+        <input type="text" id="search" placeholder="Search documents">
+      </div>
     </div>
-    <div class="section-title">Or upload</div>
-    <div class="upload">
-      <label>⬆ Upload a document
-        <input type="file" id="fileInput" accept=".docx,.xlsx,.pptx,.doc,.xls,.ppt,.odt,.ods,.odp,.txt,.csv,.pdf">
-      </label>
+
+    <div class="sec-head">
+      <h2>Files</h2>
+      <span class="count" id="count"></span>
     </div>
-    <div class="section-title">Your documents</div>
-    <div class="docs-grid" id="fileList"><div class="empty">Loading…</div></div>
+    <div id="fileList"><div class="loading">Loading…</div></div>
   </div>
 
   <div class="editor-screen" id="editorScreen">
@@ -92,91 +151,160 @@
     const sb = supabase.createClient(SB_URL, SB_KEY);
     let editor = null;
     let userId = null;
+    let allFiles = [];
     const screen = document.getElementById('editorScreen');
 
-    // Every file lives under a folder named after the signed-in user's id, so each
-    // person only ever sees their own documents.
-    function userPath(name) { return userId + '/' + name; }
+    function userPath(name){ return userId + '/' + name; }
 
-    async function requireSession() {
-      const { data: { session } } = await sb.auth.getSession();
-      if (!session) { window.location.replace(LOGIN_URL); return null; }
+    // ----- file type styling -----
+    const WORD=['doc','docx','docm','dot','dotx','odt','ott','rtf','txt','html','htm'];
+    const CELL=['xls','xlsx','xlsm','xlt','xltx','ods','ots','csv'];
+    const SLIDE=['ppt','pptx','pptm','pps','ppsx','pot','potx','odp','otp'];
+    function fileStyle(ext){
+      ext=(ext||'').toLowerCase();
+      if(CELL.includes(ext))  return {c:'var(--cell)',  t:'XLS'};
+      if(SLIDE.includes(ext)) return {c:'var(--slide)', t:'PPT'};
+      if(ext==='pdf')         return {c:'var(--pdf)',   t:'PDF'};
+      if(WORD.includes(ext))  return {c:'var(--word)',  t:'DOC'};
+      return {c:'var(--gray)', t:(ext||'?').slice(0,3).toUpperCase()};
+    }
+    function fmtSize(b){
+      if(b==null) return '';
+      if(b<1024) return b+' B';
+      if(b<1048576) return (b/1024).toFixed(0)+' KB';
+      return (b/1048576).toFixed(1)+' MB';
+    }
+    function fmtDate(iso){
+      if(!iso) return '';
+      const d=new Date(iso);
+      return d.toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'});
+    }
+
+    async function requireSession(){
+      const { data:{ session } } = await sb.auth.getSession();
+      if(!session){ window.location.replace(LOGIN_URL); return null; }
       userId = session.user.id;
       return session;
     }
 
-    async function loadFiles() {
+    async function loadFiles(){
       const list = document.getElementById('fileList');
-      const { data, error } = await sb.storage.from(BUCKET).list(userId, { sortBy: { column: 'created_at', order: 'desc' } });
-      if (error) { list.innerHTML = '<div class="empty">Could not load files.</div>'; return; }
-      const files = (data || []).filter(f => f.id && !f.name.startsWith('.'));
-      if (!files.length) { list.innerHTML = '<div class="empty">No documents yet — create or upload one above.</div>'; return; }
-      list.innerHTML = '';
-      files.forEach(f => {
-        const ext = (f.name.split('.').pop() || '').toUpperCase();
-        const el = document.createElement('div');
-        el.className = 'doc';
-        el.innerHTML = '<div class="badge">' + ext + '</div><div class="nm"></div>';
-        el.querySelector('.nm').textContent = f.name;
-        el.onclick = () => openDoc(f.name);
-        list.appendChild(el);
-      });
+      const { data, error } = await sb.storage.from(BUCKET).list(userId, { sortBy:{ column:'updated_at', order:'desc' } });
+      if(error){ list.innerHTML = '<div class="loading">Could not load files.</div>'; return; }
+      allFiles = (data||[]).filter(f => f.id && !f.name.startsWith('.'));
+      render();
     }
 
-    async function openDoc(name) {
-      screen.classList.add('open');
-      // Fetch a fresh token in case the session refreshed since page load.
-      const { data: { session } } = await sb.auth.getSession();
-      if (!session) { window.location.replace(LOGIN_URL); return; }
-      const res = await fetch('/api/onlyoffice-config?file=' + encodeURIComponent(userPath(name)), {
-        headers: { Authorization: 'Bearer ' + session.access_token }
+    function render(){
+      const list = document.getElementById('fileList');
+      const q = (document.getElementById('search').value||'').trim().toLowerCase();
+      const files = q ? allFiles.filter(f => f.name.toLowerCase().includes(q)) : allFiles;
+      document.getElementById('count').textContent = allFiles.length ? allFiles.length + (allFiles.length===1?' item':' items') : '';
+
+      if(!files.length){
+        list.innerHTML = q
+          ? '<div class="empty"><div class="big">🔍</div><div class="t">No matches</div><div class="s">Nothing matches that search.</div></div>'
+          : '<div class="empty"><div class="big">📂</div><div class="t">No documents yet</div><div class="s">Use <b>+ New</b> or <b>Upload</b> to add your first file.</div></div>';
+        return;
+      }
+
+      const grid = document.createElement('div');
+      grid.className = 'grid';
+      files.forEach(f => {
+        const ext = (f.name.split('.').pop()||'');
+        const st = fileStyle(ext);
+        const size = fmtSize(f.metadata && f.metadata.size);
+        const date = fmtDate(f.updated_at || f.created_at);
+        const meta = [date, size].filter(Boolean).join(' · ');
+
+        const card = document.createElement('div');
+        card.className = 'file';
+        card.innerHTML =
+          '<button class="fdel" title="Delete">🗑</button>' +
+          '<div class="ftop">' +
+            '<div class="ficon" style="background:'+st.c+'">'+st.t+'</div>' +
+            '<div class="fmeta"><div class="fname"></div><div class="fsub">'+meta+'</div></div>' +
+          '</div>';
+        card.querySelector('.fname').textContent = f.name;
+        card.addEventListener('click', () => openDoc(f.name));
+        card.querySelector('.fdel').addEventListener('click', (e) => { e.stopPropagation(); deleteFile(f.name); });
+        grid.appendChild(card);
       });
-      if (!res.ok) { alert('Could not open document.'); closeEditor(); return; }
+      list.innerHTML = '';
+      list.appendChild(grid);
+    }
+
+    async function deleteFile(name){
+      if(!confirm('Delete “'+name+'”?\n\nThis permanently removes the file and cannot be undone.')) return;
+      const { error } = await sb.storage.from(BUCKET).remove([userPath(name)]);
+      if(error){ alert('Could not delete: '+error.message); return; }
+      allFiles = allFiles.filter(f => f.name !== name);
+      render();
+    }
+
+    async function openDoc(name){
+      screen.classList.add('open');
+      const { data:{ session } } = await sb.auth.getSession();
+      if(!session){ window.location.replace(LOGIN_URL); return; }
+      const res = await fetch('/api/onlyoffice-config?file=' + encodeURIComponent(userPath(name)), {
+        headers:{ Authorization:'Bearer ' + session.access_token }
+      });
+      if(!res.ok){ alert('Could not open document.'); closeEditor(); return; }
       const config = await res.json();
-      config.width = '100%'; config.height = '100%';
-      config.type = (window.innerWidth <= 768) ? 'mobile' : 'desktop';
+      config.width='100%'; config.height='100%';
+      config.type = (window.innerWidth<=768) ? 'mobile' : 'desktop';
       config.events = { onRequestClose: closeEditor };
-      if (editor) { editor.destroyEditor(); editor = null; }
+      if(editor){ editor.destroyEditor(); editor=null; }
       editor = new DocsAPI.DocEditor('placeholder', config);
     }
 
-    function closeEditor() {
-      if (editor) { editor.destroyEditor(); editor = null; }
+    function closeEditor(){
+      if(editor){ editor.destroyEditor(); editor=null; }
       screen.classList.remove('open');
       loadFiles();
     }
 
-    document.querySelectorAll('.create-card').forEach(card => {
-      card.addEventListener('click', async () => {
-        const type = card.dataset.type;
-        let name = prompt('Name your new file:', 'Untitled');
-        if (!name) return;
-        name = name.replace(/[^a-zA-Z0-9 _-]/g, '').trim();
-        if (!name) return;
-        const fileName = name + '.' + type;
-        const { error } = await sb.storage.from(BUCKET).copy(TEMPLATES[type], userPath(fileName));
-        if (error) { alert('Could not create file: ' + error.message); return; }
-        openDoc(fileName);
-      });
+    async function createNew(type){
+      let name = prompt('Name your new file:', 'Untitled');
+      if(!name) return;
+      name = name.replace(/[^a-zA-Z0-9 _-]/g,'').trim();
+      if(!name) return;
+      const fileName = name + '.' + type;
+      const { error } = await sb.storage.from(BUCKET).copy(TEMPLATES[type], userPath(fileName));
+      if(error){ alert('Could not create file: '+error.message); return; }
+      openDoc(fileName);
+    }
+
+    // ----- wire up UI -----
+    const newBtn = document.getElementById('newBtn');
+    const newMenu = document.getElementById('newMenu');
+    newBtn.addEventListener('click', (e)=>{ e.stopPropagation(); newMenu.classList.toggle('open'); });
+    document.addEventListener('click', ()=> newMenu.classList.remove('open'));
+    newMenu.querySelectorAll('.menu-item').forEach(mi=>{
+      mi.addEventListener('click', ()=>{ newMenu.classList.remove('open'); createNew(mi.dataset.type); });
     });
 
-    document.getElementById('fileInput').addEventListener('change', async (e) => {
+    document.getElementById('uploadBtn').addEventListener('click', ()=> document.getElementById('fileInput').click());
+    document.getElementById('fileInput').addEventListener('change', async (e)=>{
       const file = e.target.files[0];
-      if (!file) return;
-      const { error } = await sb.storage.from(BUCKET).upload(userPath(file.name), file, { upsert: true });
-      if (error) { alert('Upload failed: ' + error.message); return; }
+      if(!file) return;
+      const { error } = await sb.storage.from(BUCKET).upload(userPath(file.name), file, { upsert:true });
+      e.target.value = '';
+      if(error){ alert('Upload failed: '+error.message); return; }
       openDoc(file.name);
     });
 
-    document.getElementById('signout').addEventListener('click', async (e) => {
+    document.getElementById('search').addEventListener('input', render);
+
+    document.getElementById('signout').addEventListener('click', async (e)=>{
       e.preventDefault();
       await sb.auth.signOut();
       window.location.replace(LOGIN_URL);
     });
 
-    (async () => {
+    (async ()=>{
       const session = await requireSession();
-      if (session) loadFiles();
+      if(session) loadFiles();
     })();
   </script>
 </body>
