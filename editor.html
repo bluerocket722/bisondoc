@@ -85,6 +85,9 @@
     .editor-screen.open{display:block}
     #placeholder{width:100%;height:100%}
 
+        /* Invisible shield over the OnlyOffice logo so it can't be clicked through to onlyoffice.com */
+    #logoBlock{position:absolute;top:0;left:0;width:165px;height:30px;z-index:1001;background:transparent;cursor:default}
+
     @media (max-width:640px){
       .wrap{padding:18px 14px 48px}
       .search input{width:160px}
@@ -138,8 +141,9 @@
     <div id="fileList"><div class="loading">Loading…</div></div>
   </div>
 
-  <div class="editor-screen" id="editorScreen">
+    <div class="editor-screen" id="editorScreen">
     <div id="placeholder"></div>
+    <div id="logoBlock"></div>
   </div>
 
   <script>
