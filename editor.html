@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Back Office | Documents</title>
+  <title>Bison Docs | Documents</title>
+  <link rel="icon" type="image/svg+xml" href="logo.svg">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://docs.bisondoc.com/web-apps/apps/api/documents/api.js"></script>
   <style>
     :root{
-      --navy:#16305c; --blue:#2f6cd6; --blue-dark:#1b4fb0; --blue-soft:#eaf1fd;
+      --navy:#3a2614; --blue:#7a4a24; --blue-dark:#5a3416; --blue-soft:#f1e8de;
       --ink:#1b2733; --sub:#5b6b7c; --line:#e6eaf0; --bg:#f3f6fb; --surface:#fff;
       --word:#2b579a; --cell:#217346; --slide:#c43e1c; --pdf:#d93025; --gray:#6b7785;
       --danger:#d93025;
@@ -22,8 +23,8 @@
     /* Top bar */
     .topbar{height:56px;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 22px;gap:16px;position:sticky;top:0;z-index:50}
     .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;letter-spacing:.2px;color:var(--ink)}
-    .brand .mark{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--blue),#5b8def);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px}
-    .brand span{color:var(--blue)}
+    .brand .mark{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#8a5a2c,#4a2c14);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px}
+    .brand span{color:#7a4a24}
     .brand small{color:var(--sub);font-weight:600;font-size:13px;margin-left:2px}
     .top-right{margin-left:auto;display:flex;align-items:center;gap:18px}
     .top-link{color:var(--sub);text-decoration:none;font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
@@ -36,14 +37,14 @@
     /* Command bar */
     .cmdbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
     .btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:14px;font-weight:600;padding:9px 16px;border-radius:8px;cursor:pointer;transition:background .15s,border-color .15s,box-shadow .15s;font-family:inherit}
-    .btn:hover{background:var(--blue-soft);border-color:#cfe0fb}
+    .btn:hover{background:var(--blue-soft);border-color:#e3d3c0}
     .btn .ic{font-size:16px;line-height:1}
     .btn-primary{background:var(--blue);border-color:var(--blue);color:#fff}
     .btn-primary:hover{background:var(--blue-dark);border-color:var(--blue-dark)}
     .spacer{flex:1}
     .search{position:relative}
     .search input{height:40px;width:240px;max-width:46vw;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:0 14px 0 36px;font-size:14px;font-family:inherit;outline:none;transition:border-color .15s,box-shadow .15s}
-    .search input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(47,108,214,.14)}
+    .search input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(122,74,36,.18)}
     .search .si{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--gray);font-size:16px;pointer-events:none}
 
     /* New dropdown */
@@ -63,7 +64,7 @@
     /* File grid */
     .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
     .file{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;cursor:pointer;transition:box-shadow .15s,border-color .15s,transform .12s}
-    .file:hover{box-shadow:var(--shadow-md);border-color:#d4e2fb;transform:translateY(-2px)}
+    .file:hover{box-shadow:var(--shadow-md);border-color:#e3d3c0;transform:translateY(-2px)}
     .file .ftop{display:flex;align-items:flex-start;gap:12px}
     .ficon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px;flex-shrink:0;letter-spacing:.3px}
     .fmeta{min-width:0;flex:1}
@@ -80,12 +81,31 @@
     .empty .s{font-size:13px}
     .loading{color:var(--sub);font-size:14px;padding:18px 2px}
 
+    /* Pitch / CTA section */
+    .pitch{margin-top:48px;background:linear-gradient(135deg,#3a2614 0%,#5a3416 50%,#7a4a24 100%);border-radius:14px;padding:40px 36px;color:#fff;position:relative;overflow:hidden}
+    .pitch::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;background:rgba(255,255,255,.04);border-radius:50%}
+    .pitch::after{content:'';position:absolute;bottom:-60px;left:-20px;width:260px;height:260px;background:rgba(255,255,255,.03);border-radius:50%}
+    .pitch-inner{position:relative;z-index:1}
+    .pitch h2{font-size:22px;font-weight:700;margin-bottom:6px;line-height:1.3}
+    .pitch .tagline{font-size:15px;color:rgba(255,255,255,.8);margin-bottom:24px;line-height:1.5;max-width:620px}
+    .pitch-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px}
+    .pitch-card{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:18px 16px}
+    .pitch-card .pc-icon{font-size:24px;margin-bottom:8px}
+    .pitch-card .pc-title{font-size:14px;font-weight:700;margin-bottom:4px}
+    .pitch-card .pc-desc{font-size:13px;color:rgba(255,255,255,.75);line-height:1.45}
+    .pitch-cta{display:inline-flex;align-items:center;gap:10px;background:#fff;color:#3a2614;font-size:16px;font-weight:700;padding:14px 28px;border-radius:10px;text-decoration:none;transition:transform .15s,box-shadow .15s}
+    .pitch-cta:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.25)}
+    .pitch-cta .cta-sub{font-size:13px;font-weight:500;color:var(--sub);margin-left:4px}
+
+    @media (max-width:768px){
+      .pitch-grid{grid-template-columns:1fr}
+      .pitch{padding:28px 20px}
+    }
+
     /* Fullscreen editor */
     .editor-screen{position:fixed;inset:0;z-index:1000;background:#fff;display:none}
     .editor-screen.open{display:block}
     #placeholder{width:100%;height:100%}
-
-        /* Invisible shield over the OnlyOffice logo so it can't be clicked through to onlyoffice.com */
     #logoBlock{position:absolute;top:0;left:0;width:165px;height:30px;z-index:1001;background:transparent;cursor:default}
 
     @media (max-width:640px){
@@ -97,7 +117,10 @@
 </head>
 <body>
   <div class="topbar">
-    <div class="brand"><div class="mark">B</div>Back<span>Office</span><small>· Documents</small></div>
+    <div class="brand">
+      <div class="mark">B</div>
+      Bison<span> Docs</span><small>· Documents</small>
+    </div>
     <div class="top-right">
       <a href="back-office.html" class="top-link"><span class="ic">←</span> Tools</a>
       <a href="#" class="top-link" id="signout">Sign out</a>
@@ -139,9 +162,35 @@
       <span class="count" id="count"></span>
     </div>
     <div id="fileList"><div class="loading">Loading…</div></div>
+
+    <!-- Pitch / Integration CTA -->
+    <div class="pitch">
+      <div class="pitch-inner">
+        <h2>Want these tools built into your own systems?</h2>
+        <p class="tagline">We can connect your documents, spreadsheets, and presentations directly to your existing workflows — automated reports, live dashboards, and seamless data pipelines. No more copy-pasting between tools.</p>
+        <div class="pitch-grid">
+          <div class="pitch-card">
+            <div class="pc-icon">📊</div>
+            <div class="pc-title">Spreadsheet Integration</div>
+            <div class="pc-desc">Connect your sheets to databases, CRMs, and project management tools. Auto-populate bids, cost estimates, and tracking logs.</div>
+          </div>
+          <div class="pitch-card">
+            <div class="pc-icon">🔍</div>
+            <div class="pc-title">Free Website Audit</div>
+            <div class="pc-desc">We'll review your current website and tech stack at no cost — find bottlenecks, security gaps, and opportunities to streamline.</div>
+          </div>
+          <div class="pitch-card">
+            <div class="pc-icon">⚙️</div>
+            <div class="pc-title">Full-Stack Integration</div>
+            <div class="pc-desc">End-to-end system builds — from document automation to custom portals. One team handles front end, back end, and everything in between.</div>
+          </div>
+        </div>
+        <a href="tel:2242063770" class="pitch-cta">📞 Call (224) 206-3770 <span class="cta-sub">— Free consultation</span></a>
+      </div>
+    </div>
   </div>
 
-    <div class="editor-screen" id="editorScreen">
+  <div class="editor-screen" id="editorScreen">
     <div id="placeholder"></div>
     <div id="logoBlock"></div>
   </div>
@@ -160,7 +209,6 @@
 
     function userPath(name){ return userId + '/' + name; }
 
-    // ----- file type styling -----
     const WORD=['doc','docx','docm','dot','dotx','odt','ott','rtf','txt','html','htm'];
     const CELL=['xls','xlsx','xlsm','xlt','xltx','ods','ots','csv'];
     const SLIDE=['ppt','pptx','pptm','pps','ppsx','pot','potx','odp','otp'];
@@ -239,7 +287,7 @@
     }
 
     async function deleteFile(name){
-      if(!confirm('Delete “'+name+'”?\n\nThis permanently removes the file and cannot be undone.')) return;
+      if(!confirm('Delete "'+name+'"?\n\nThis permanently removes the file and cannot be undone.')) return;
       const { error } = await sb.storage.from(BUCKET).remove([userPath(name)]);
       if(error){ alert('Could not delete: '+error.message); return; }
       allFiles = allFiles.filter(f => f.name !== name);
@@ -268,18 +316,28 @@
       loadFiles();
     }
 
+    function uniqueName(fileName){
+      const taken = new Set(allFiles.map(f => f.name.toLowerCase()));
+      if(!taken.has(fileName.toLowerCase())) return fileName;
+      const dot = fileName.lastIndexOf('.');
+      const base = dot > 0 ? fileName.slice(0, dot) : fileName;
+      const ext  = dot > 0 ? fileName.slice(dot) : '';
+      let i = 1, candidate;
+      do { candidate = base + ' (' + i + ')' + ext; i++; } while(taken.has(candidate.toLowerCase()));
+      return candidate;
+    }
+
     async function createNew(type){
       let name = prompt('Name your new file:', 'Untitled');
       if(!name) return;
       name = name.replace(/[^a-zA-Z0-9 _-]/g,'').trim();
       if(!name) return;
-      const fileName = name + '.' + type;
+      const fileName = uniqueName(name + '.' + type);
       const { error } = await sb.storage.from(BUCKET).copy(TEMPLATES[type], userPath(fileName));
       if(error){ alert('Could not create file: '+error.message); return; }
       openDoc(fileName);
     }
 
-    // ----- wire up UI -----
     const newBtn = document.getElementById('newBtn');
     const newMenu = document.getElementById('newMenu');
     newBtn.addEventListener('click', (e)=>{ e.stopPropagation(); newMenu.classList.toggle('open'); });
@@ -292,10 +350,11 @@
     document.getElementById('fileInput').addEventListener('change', async (e)=>{
       const file = e.target.files[0];
       if(!file) return;
-      const { error } = await sb.storage.from(BUCKET).upload(userPath(file.name), file, { upsert:true });
+      const finalName = uniqueName(file.name);
+      const { error } = await sb.storage.from(BUCKET).upload(userPath(finalName), file, { upsert:false });
       e.target.value = '';
       if(error){ alert('Upload failed: '+error.message); return; }
-      openDoc(file.name);
+      openDoc(finalName);
     });
 
     document.getElementById('search').addEventListener('input', render);
